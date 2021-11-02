@@ -1,0 +1,14 @@
+*__pycache__*
+*/__pycache__/*
+*egg*
+*mypy*
+.pytest/*
+.vscode/*
+.test/*
+build/*
+dist/*
+.coverage
+htmlcov/*
+docs/build/*
+docs/source/_autosummary/*
+*.xdf
