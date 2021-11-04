@@ -21,7 +21,7 @@ setup(
     install_requires=install_requires,
     download_url="git@github.com:agricolab/app-nonin.git",
     license="MIT",
-    entry_points={"console_scripts": ["nonin-lsl=nonin.outlet:main"],},
+    entry_points={"console_scripts": ["nonin-lsl=nonin.__main__:main"],},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",

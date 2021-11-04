@@ -1,12 +1,65 @@
 from serial import Serial
+from serial.tools.list_ports import comports, grep
 from typing import Dict
 from pylsl import local_clock
+import time
+
+
+def detect_nonin_devices():
+    """
+    Detects all nonin devices connected to the computer.
+
+    returns
+    -------
+    devices : list
+        a list of ports that are Nonin Medical Pulse Oximeters
+    """
+    devices = []
+    for port in comports():
+        if (
+            "Nonin Medical" == port.manufacturer
+            and "Pulse Oximeter" == port.product
+        ):
+            devices.append(port)
+    if len(devices) == 0:
+        raise ConnectionError("No Nonin Medical Pulse Oximeter found")
+
+    return devices
+
+
+def validate_port(port: str = None):
+    valid_devices = detect_nonin_devices()
+    if port is None:
+        device = valid_devices[0]
+        port = device.device
+        print(
+            f"Automatically chose {port} as it is a {device.manufacturer} {device.product}"
+        )
+    else:
+        for d in valid_devices:
+            if d.device == port:
+                device = d
+                port = device.device
+                print(
+                    f"Confirmed {port} is {device.manufacturer} {device.product}"
+                )
+                break
+        else:
+            raise ConnectionError("No Nonin Medical Pulse Oximeter found")
+    time.sleep(1)
+    return port, device
 
 
 class Nonin:
     "Object resembling the Nonin 3012 LP USB for data handling"
 
-    def __init__(self, port, baudrate=9600, protocol=2):
+    def __init__(self, port: str = None, baudrate=9600, protocol=2):
+        port, device = validate_port(port)
+        self.port = port
+        self.manufacturer = device.manufacturer
+        self.product = device.product
+        self.serial_number = device.serial_number
+        print("Found", self)
         if protocol is not 2:
             raise NotImplementedError("Only protocol 2 is supported")
         self.serial = Serial(port, baudrate)
@@ -28,10 +81,13 @@ class Nonin:
         status = self.parse_status(status)
         if status["Frame Sync"] == 1:
             self.packet_count += 1
-            print(f"Packet #{self.packet_count:10.0f}")
+            # print(f"Packet #{self.packet_count:10.0f}")
             self.frame_count = 0
         pleth = self.parse_pleth(pleth)
-        return {**status, **pleth}
+        return {
+            **pleth,
+            **status,
+        }
 
     @staticmethod
     def parse_status(status: int) -> Dict[str, int]:
@@ -71,9 +127,13 @@ class Nonin:
     def parse_pleth(pleth: int) -> Dict[str, int]:
         return {"PPG": pleth}
 
+    def __str__(self) -> str:
+        return f"{self.manufacturer} {self.product} {self.serial_number} at {self.port}"
+
 
 if __name__ == "__main__":
-    nonin = Nonin("/dev/ttyUSB0")
+    # nonin = Nonin("/dev/ttyUSB0")
+    nonin = Nonin(port=None)
     t0 = local_clock()
     while True:
         data = nonin.read()

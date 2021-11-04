@@ -3,19 +3,27 @@ from socket import gethostname
 import threading
 
 
-def create_stream_outlet():
+def create_stream_outlet(nonin):
     info = StreamInfo(
-        name="Nonin 3012 LP USB",
+        name="Nonin Medical Pulse Oximeter",
         type="PPG",
-        channel_count=1,
+        channel_count=7,
         nominal_srate=75,
         channel_format="float32",
-        source_id="Nonin3012LPUSB_" + str(gethostname()),
+        source_id=f"Nonin_3012_LP_USB_{nonin.serial_number}_{str(gethostname())}",
     )
 
-    names = ["PPG"]
-    units = ["au"]
-    types = ["PPG"]
+    names = [
+        "PPG",
+        "Frame Sync",
+        "Perfusion Amplitude",
+        "Sensor Alarm",
+        "Out Of Track",
+        "Artifact - short term",
+        "Sensor disconnect",
+    ]
+    units = ["au"] * len(names)
+    types = ["PPG"] + ["STATE"] * (len(names) - 1)
 
     channels = info.desc().append_child("channels")
     for c, u, t in zip(names, units, types):
@@ -35,7 +43,7 @@ class Outlet(threading.Thread):
     def run(self):
         self.is_running = True
         nonin = self.nonin
-        stream = create_stream_outlet()
+        stream = create_stream_outlet(nonin)
 
         t0 = None
 
@@ -47,25 +55,15 @@ class Outlet(threading.Thread):
                 if len(dt) > 100:
                     dt = dt[-100:]
                 Fs = len(dt) / sum(dt)
-                ppg = data["PPG"]
-                print(
-                    f"#{int(cnt[0]):5} with {ppg:3.0f} at {t1:4.2f} approx Fs = {Fs:4.2f}"
-                )
+                if data["Frame Sync"] == 1:
+                    ppg = data["PPG"]
+                    print(
+                        f"Packet #{nonin.packet_count:5.0f} example frame #{int(cnt[0]):5} with {ppg:3.0f} at {t1:4.2f} Fs ~ {Fs:4.2f}"
+                    )
             return t1
 
         while self.is_running:  # publish
             data = nonin.read()
             t0 = print_log(t0, data)
-            stream.push_sample([data["PPG"]])
+            stream.push_sample(list(data.values()))
 
-
-def main():
-    from nonin.device import Nonin
-
-    nonin = Nonin("/dev/ttyUSB0")
-    outlet = Outlet(nonin)
-    outlet.start()
-
-
-if __name__ == "__main__":
-    main()
