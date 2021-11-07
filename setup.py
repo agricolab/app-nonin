@@ -9,17 +9,17 @@ with (Path(__file__).parent / "requirements.txt").open() as f:
 
 setup(
     name="nonin",
-    version="0.1",
+    version="0.2",
     description="Publish data from a Nonin PPG as LSL Outlet",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Robert Guggenberger",
     author_email="robert.guggenberger@uni-tuebingen.de",
-    url="git@github.com:agricolab/app-nonin.git",
-    packages=find_packages(exclude=["test*"]),
+    url="https://github.com/agricolab/app-nonin",
+    packages=find_packages(include=["nonin"], exclude=["test*"]),
     include_package_data=True,
     install_requires=install_requires,
-    download_url="git@github.com:agricolab/app-nonin.git",
+    download_url="https://github.com/agricolab/app-nonin",
     license="MIT",
     entry_points={"console_scripts": ["nonin-lsl=nonin.__main__:main"],},
     classifiers=[

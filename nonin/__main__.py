@@ -1,14 +1,23 @@
 import argparse
 from nonin.device import detect_nonin_devices
+from nonin.device import Nonin
+from nonin.outlet import Outlet
 
 
-def run(port=None):
-    from nonin.device import Nonin
-    from nonin.outlet import Outlet
+def run(port=None) -> Outlet:
+    """start a Nonin PPG LSL Outlet 
+    
+    
+    Args
+    ----
+    port : str
+        the port at which the Nonin Medical Xpod 3012 LP USB Pulse Oximeter is connected
+    """
 
     nonin = Nonin(port=port)
     outlet = Outlet(nonin)
     outlet.start()
+    return outlet
 
 
 def main():
@@ -28,7 +37,7 @@ def main():
             print(device.device)
 
     else:
-        run(args.port)
+        outlet = run(args.port)
 
 
 if __name__ == "__main__":
