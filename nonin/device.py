@@ -16,10 +16,9 @@ def detect_nonin_devices():
     """
     devices = []
     for port in comports():
-        if (
-            "Nonin Medical" == port.manufacturer
-            and "Pulse Oximeter" == port.product
-        ):
+        if port.vid == 1027 and port.pid == 24577:
+            port.manufacturer = "Nonin Medical"
+            port.product = "Pulse Oximeter"
             devices.append(port)
     if len(devices) == 0:
         raise ConnectionError("No Nonin Medical Pulse Oximeter found")
