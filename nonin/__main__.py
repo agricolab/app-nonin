@@ -4,6 +4,15 @@ from nonin.device import Nonin
 from nonin.outlet import Outlet
 
 
+def scan():
+    print("Searching for Nonin Medical Pulse Oximeters")
+    try:
+        for device in detect_nonin_devices():
+            print(device.device)
+    except ConnectionError as e:
+        print(e)
+
+
 def run(port=None) -> Outlet:
     """start a Nonin PPG LSL Outlet 
     
@@ -31,13 +40,13 @@ def main():
     args = parser.parse_args()
 
     if args.scan:
-
-        print("Nonin Medical Pulse Oximeter found at")
-        for device in detect_nonin_devices():
-            print(device.device)
-
+        scan()
     else:
-        outlet = run(args.port)
+        try:
+            outlet = run(args.port)
+        except ConnectionError as e:
+            parser.print_help()
+            print("\n", e)
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ with (Path(__file__).parent / "requirements.txt").open() as f:
 
 setup(
     name="nonin",
-    version="0.2.2",
+    version="0.2.4",
     description="Publish data from a Nonin PPG as LSL Outlet",
     long_description=long_description,
     long_description_content_type="text/markdown",
